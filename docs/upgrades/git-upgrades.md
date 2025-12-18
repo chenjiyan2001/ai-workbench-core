@@ -6,22 +6,38 @@
 
 ## 版本记录
 
-### [未发布] - Unreleased
-
-> 待下次发布的变更
-
----
-
-### [v0.1.0] - 2024-XX-XX
+### [v0.1.0] - 2024-12-18
 
 #### 📋 变更摘要
-初始版本，建立项目规范文档体系。
+初始版本，建立项目规范文档体系，为数据处理平台开发提供统一规范。
 
 #### ✨ 新增 (Added)
-- 建立开发规范文档 (git/python/logging/config/error-handling)
-- 建立数据库规范文档 (mysql/mongodb/redis/milvus/dameng)
-- 建立集成规范文档 (llm/api)
-- 建立架构文档 (overview/adr)
+- **开发规范** (development/)
+  - Git 使用规范：分支命名、提交规范、操作权限矩阵、Claude 行为指南
+  - Python 代码规范：代码风格、类型注解、项目结构
+  - 日志规范：日志级别、格式、敏感信息脱敏
+  - 配置管理规范：环境变量、密钥管理、Pydantic Settings
+  - 错误处理规范：异常体系、错误码、重试策略
+
+- **数据库规范** (database/)
+  - MySQL 规范：命名、SQL 编写、索引、事务
+  - MongoDB 规范：集合设计、索引、聚合管道
+  - Redis 规范：Key 命名、过期策略、缓存模式
+  - Milvus 规范：向量集合、索引配置、搜索优化
+  - 达梦规范：兼容性处理、SQL 适配
+
+- **集成规范** (integration/)
+  - LLM 调用规范：Prompt 管理、成本控制、调用追踪
+  - API 设计规范：RESTful、响应格式、认证授权
+
+- **架构文档** (architecture/)
+  - 整体架构概述
+  - ADR-0001: 采用模块化单体架构决策
+
+- **项目配置**
+  - CLAUDE.md：Claude 行为指令文件
+  - .gitignore：Git 忽略规则
+  - 变更日志模板
 
 #### 🐛 修复 (Fixed)
 - 无
@@ -34,6 +50,9 @@
 
 #### 📁 涉及文件
 ```
+.gitignore
+CLAUDE.md
+README.md
 development/git.md
 development/python.md
 development/logging.md
@@ -48,10 +67,11 @@ integration/llm.md
 integration/api.md
 architecture/overview.md
 architecture/adr/0001-modular-monolith.md
+docs/upgrades/git-upgrades.md
 ```
 
 #### 💬 备注
-项目初始化，建立规范文档体系。
+项目初始化版本，建立完整的规范文档体系，供团队成员和 Claude 在后续开发中参考遵循。
 
 ---
 
