@@ -11,8 +11,6 @@
 
 ## 规范文档位置
 
-Claude 在编写代码前，必须参考以下规范：
-
 | 场景 | 规范文档 |
 |------|---------|
 | Git 操作 | [development/git.md](development/git.md) |
@@ -27,6 +25,17 @@ Claude 在编写代码前，必须参考以下规范：
 | 达梦 | [database/dameng.md](database/dameng.md) |
 | LLM 调用 | [integration/llm.md](integration/llm.md) |
 | API 设计 | [integration/api.md](integration/api.md) |
+
+### 文档查阅原则
+
+**只在必要时查阅文档，避免不必要的 token 消耗。**
+
+| 需要查阅 | 不需要查阅 |
+|---------|-----------|
+| 首次接触某模块/功能 | 同一对话中已读过该文档 |
+| 不确定规范细节时 | 常规简单操作 |
+| 涉及危险操作需确认权限 | 用户给出明确具体指令 |
+| 用户明确要求按规范执行 | 日常讨论/问答 |
 
 ## Claude/Codex 协作分工
 
