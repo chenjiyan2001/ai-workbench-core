@@ -40,6 +40,16 @@
 | [overview.md](architecture/overview.md) | 整体架构设计 |
 | [adr/](architecture/adr/) | 架构决策记录 (ADR) |
 
+### 文档撰写规范 (docs-standard/)
+
+| 文档 | 说明 |
+|------|------|
+| [readme.md](docs-standard/readme.md) | 项目文档规范（README、使用指南） |
+| [api-docs.md](docs-standard/api-docs.md) | API 文档规范 |
+| [code-comments.md](docs-standard/code-comments.md) | 代码注释规范 |
+| [architecture.md](docs-standard/architecture.md) | 架构文档规范 |
+| [changelog.md](docs-standard/changelog.md) | 变更日志规范 |
+
 ### 变更记录 (docs/upgrades/)
 
 | 文档 | 说明 |

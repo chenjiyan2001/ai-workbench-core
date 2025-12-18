@@ -27,6 +27,11 @@
 | 达梦 | [database/dameng.md](database/dameng.md) |
 | LLM 调用 | [integration/llm.md](integration/llm.md) |
 | API 设计 | [integration/api.md](integration/api.md) |
+| 项目文档规范 | [docs-standard/readme.md](docs-standard/readme.md) |
+| API 文档规范 | [docs-standard/api-docs.md](docs-standard/api-docs.md) |
+| 代码注释规范 | [docs-standard/code-comments.md](docs-standard/code-comments.md) |
+| 架构文档规范 | [docs-standard/architecture.md](docs-standard/architecture.md) |
+| 变更日志规范 | [docs-standard/changelog.md](docs-standard/changelog.md) |
 
 ### 文档查阅原则
 
