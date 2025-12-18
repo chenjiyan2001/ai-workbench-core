@@ -13,7 +13,9 @@
 
 | 场景 | 规范文档 |
 |------|---------|
-| Git 操作 | [development/git.md](development/git.md) |
+| Git 基础规范 | [development/git.md](development/git.md) |
+| Git 操作指南 | [development/git-operations.md](development/git-operations.md) |
+| Git Claude 行为 | [development/git-claude.md](development/git-claude.md) |
 | Python 代码 | [development/python.md](development/python.md) |
 | 日志记录 | [development/logging.md](development/logging.md) |
 | 配置管理 | [development/config.md](development/config.md) |

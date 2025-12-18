@@ -8,7 +8,9 @@
 
 | 文档 | 说明 |
 |------|------|
-| [git.md](development/git.md) | Git 分支、提交、PR 流程规范 |
+| [git.md](development/git.md) | Git 分支、提交、Tag 基础规范 |
+| [git-operations.md](development/git-operations.md) | Git 操作场景指南 |
+| [git-claude.md](development/git-claude.md) | Claude Git 行为规范 |
 | [python.md](development/python.md) | Python 代码风格、类型注解、项目结构 |
 | [logging.md](development/logging.md) | 日志级别、格式、敏感信息处理 |
 | [config.md](development/config.md) | 配置管理、环境变量、密钥处理 |
