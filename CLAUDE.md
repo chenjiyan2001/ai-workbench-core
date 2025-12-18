@@ -119,6 +119,47 @@ Claude 与 Codex 在本项目中有明确的职责分工：
 - Git 提交信息: 中文
 - 变量/函数命名: 英文 (遵循 Python 命名规范)
 
+## 命令执行环境
+
+### 环境说明
+
+本项目运行在 Windows 系统上，但 Claude 内部调用的 Bash 工具使用 Unix 兼容 shell（Git Bash / WSL）。
+
+| 项目 | 实际情况 |
+|------|---------|
+| 操作系统 | Windows |
+| 工作目录格式 | Windows 路径 (`E:\ai-workbench-core`) |
+| Bash 执行器 | Unix shell (`/usr/bin/bash`) |
+
+### 内部执行 vs 用户展示
+
+| 场景 | 内部执行（Claude 调用） | 用户展示（文档/说明） |
+|------|------------------------|---------------------|
+| 切换目录 | 无需切换（已在工作目录） | `cd E:\project` 或 `cd /path/to/project` |
+| 路径分隔符 | `/` (Unix 风格) | 根据用户系统选择 |
+| 环境变量 | `$VAR` | Windows: `%VAR%`，Unix: `$VAR` |
+
+### 执行规范
+
+1. **无需手动切换目录**: 工作目录已设定，直接执行命令
+2. **避免 Windows CMD 语法**: 不要使用 `cd /d`、`dir` 等 CMD 命令
+3. **路径处理**: 如需拼接路径，使用 Unix 风格 `/`
+4. **给用户的命令**: 在文档或说明中，根据上下文提供对应系统的命令格式
+
+### 示例
+
+```bash
+# ✅ 正确：直接执行
+git status
+python script.py
+
+# ❌ 错误：使用 Windows CMD 语法
+cd /d E:\project && git status
+
+# ❌ 错误：不必要的目录切换
+cd E:\ai-workbench-core && git status
+```
+
 ## 禁止事项
 
 - 禁止在代码中硬编码密钥、密码、连接字符串
