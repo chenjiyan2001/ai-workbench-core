@@ -119,6 +119,40 @@ Claude 与 Codex 在本项目中有明确的职责分工：
 - Git 提交信息: 中文
 - 变量/函数命名: 英文 (遵循 Python 命名规范)
 
+## 字符集与时区
+
+### 字符集
+
+- **默认**: UTF-8
+- **文件编码**: UTF-8（无 BOM）
+- **数据库**: `utf8mb4`（MySQL）、`UTF-8`（其他）
+
+### 时区
+
+| 场景 | 处理方式 |
+|------|---------|
+| 默认时区 | 东八区 (UTC+8, Asia/Shanghai) |
+| 代码中 | **一般不显式声明**，依赖系统/环境配置 |
+| 数据库存储 | 根据业务需求选择（本地时间或 UTC） |
+| 问题排查 | 发现时间不一致时，才强制指定东八区 |
+
+### 示例
+
+```python
+# ✅ 正常情况：不显式声明时区
+from datetime import datetime
+now = datetime.now()
+
+# ✅ 时间不一致时：强制指定东八区
+from datetime import datetime, timezone, timedelta
+tz_shanghai = timezone(timedelta(hours=8))
+now = datetime.now(tz_shanghai)
+
+# 或使用 pytz/zoneinfo
+from zoneinfo import ZoneInfo
+now = datetime.now(ZoneInfo("Asia/Shanghai"))
+```
+
 ## 命令执行环境
 
 ### 用户系统环境
