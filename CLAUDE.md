@@ -21,6 +21,8 @@
 | 配置管理 | [development/config.md](development/config.md) |
 | 错误处理 | [development/error-handling.md](development/error-handling.md) |
 | 脚本编写 | [development/scripts.md](development/scripts.md) |
+| 并发编程 | [development/python-concurrency.md](development/python-concurrency.md) |
+| 性能优化 | [development/python-performance.md](development/python-performance.md) |
 | MySQL | [database/mysql.md](database/mysql.md) |
 | MongoDB | [database/mongodb.md](database/mongodb.md) |
 | Redis | [database/redis.md](database/redis.md) |
