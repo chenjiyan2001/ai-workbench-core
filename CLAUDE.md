@@ -121,43 +121,81 @@ Claude 与 Codex 在本项目中有明确的职责分工：
 
 ## 命令执行环境
 
-### 环境说明
+### 用户系统环境
 
-本项目运行在 Windows 系统上，但 Claude 内部调用的 Bash 工具使用 Unix 兼容 shell（Git Bash / WSL）。
+| 项目 | 值 |
+|------|-----|
+| 操作系统 | Windows |
+| 终端类型 | PowerShell / CMD |
+| 工作目录 | `E:\ai-workbench-core` |
+
+### Claude 内部执行环境
 
 | 项目 | 实际情况 |
 |------|---------|
-| 操作系统 | Windows |
-| 工作目录格式 | Windows 路径 (`E:\ai-workbench-core`) |
 | Bash 执行器 | Unix shell (`/usr/bin/bash`) |
+| 路径风格 | Unix (`/`) |
+| 环境变量 | `$VAR` |
 
-### 内部执行 vs 用户展示
+### 命令记录规范
 
-| 场景 | 内部执行（Claude 调用） | 用户展示（文档/说明） |
-|------|------------------------|---------------------|
-| 切换目录 | 无需切换（已在工作目录） | `cd E:\project` 或 `cd /path/to/project` |
-| 路径分隔符 | `/` (Unix 风格) | 根据用户系统选择 |
-| 环境变量 | `$VAR` | Windows: `%VAR%`，Unix: `$VAR` |
+**文档中的终端命令必须记录两种版本：**
+
+```markdown
+### 安装依赖
+
+**Unix (Linux/macOS):**
+```bash
+export DATABASE_URL="mysql://user:pass@localhost/db"
+pip install -r requirements.txt
+```
+
+**Windows (PowerShell):**
+```powershell
+$env:DATABASE_URL="mysql://user:pass@localhost/db"
+pip install -r requirements.txt
+```
+```
 
 ### 执行规范
 
-1. **无需手动切换目录**: 工作目录已设定，直接执行命令
-2. **避免 Windows CMD 语法**: 不要使用 `cd /d`、`dir` 等 CMD 命令
-3. **路径处理**: 如需拼接路径，使用 Unix 风格 `/`
-4. **给用户的命令**: 在文档或说明中，根据上下文提供对应系统的命令格式
+| 场景 | 规范 |
+|------|------|
+| Claude 内部执行 | **始终使用 Unix 语法**（Bash 工具） |
+| 提供给用户执行 | **根据用户系统选择**（参考上方「用户系统环境」） |
+| 文档撰写 | **记录双版本**（Unix + Windows） |
+
+### 常用命令对照表
+
+| 操作 | Unix (Bash) | Windows (PowerShell) |
+|------|-------------|---------------------|
+| 设置环境变量 | `export VAR=value` | `$env:VAR="value"` |
+| 读取环境变量 | `echo $VAR` | `echo $env:VAR` |
+| 路径分隔符 | `/` | `\` 或 `/`（PowerShell 兼容） |
+| 多命令串联 | `cmd1 && cmd2` | `cmd1; cmd2` 或 `cmd1 -and cmd2` |
+| 删除文件 | `rm file` | `Remove-Item file` |
+| 删除目录 | `rm -rf dir` | `Remove-Item -Recurse -Force dir` |
+| 查看文件 | `cat file` | `Get-Content file` |
+| 查找文件 | `find . -name "*.py"` | `Get-ChildItem -Recurse -Filter "*.py"` |
 
 ### 示例
 
+**Claude 内部执行（始终 Unix）：**
 ```bash
-# ✅ 正确：直接执行
+# ✅ 正确
 git status
 python script.py
+export MY_VAR=value && python app.py
 
-# ❌ 错误：使用 Windows CMD 语法
-cd /d E:\project && git status
+# ❌ 错误：Windows 语法
+$env:MY_VAR="value"
+```
 
-# ❌ 错误：不必要的目录切换
-cd E:\ai-workbench-core && git status
+**提供给用户（本项目为 Windows）：**
+```powershell
+# 设置环境变量并运行
+$env:DATABASE_URL="mysql://localhost/db"
+python app.py
 ```
 
 ## 禁止事项
