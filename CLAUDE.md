@@ -20,6 +20,7 @@
 | 日志记录 | [development/logging.md](development/logging.md) |
 | 配置管理 | [development/config.md](development/config.md) |
 | 错误处理 | [development/error-handling.md](development/error-handling.md) |
+| 脚本编写 | [development/scripts.md](development/scripts.md) |
 | MySQL | [database/mysql.md](database/mysql.md) |
 | MongoDB | [database/mongodb.md](database/mongodb.md) |
 | Redis | [database/redis.md](database/redis.md) |

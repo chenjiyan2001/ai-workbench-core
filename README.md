@@ -15,6 +15,7 @@
 | [logging.md](development/logging.md) | 日志级别、格式、敏感信息处理 |
 | [config.md](development/config.md) | 配置管理、环境变量、密钥处理 |
 | [error-handling.md](development/error-handling.md) | 异常定义、错误码、重试策略 |
+| [scripts.md](development/scripts.md) | 脚本编写规范（参数、多线程、断点续传） |
 
 ### 数据库规范 (database/)
 
