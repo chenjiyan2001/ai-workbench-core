@@ -13,6 +13,8 @@
 | [git-claude.md](development/git-claude.md) | Claude Git 行为规范 |
 | [python.md](development/python.md) | Python 代码风格、类型注解、项目结构 |
 | [logging.md](development/logging.md) | 日志级别、格式、敏感信息处理 |
+| [logging-format.md](development/logging-format.md) | 日志格式标准（TODO） |
+| [logging-etl.md](development/logging-etl.md) | 日志采集 ETL（TODO） |
 | [config.md](development/config.md) | 配置管理、环境变量、密钥处理 |
 | [error-handling.md](development/error-handling.md) | 异常定义、错误码、重试策略 |
 | [scripts.md](development/scripts.md) | 脚本编写规范（参数、多线程、断点续传） |

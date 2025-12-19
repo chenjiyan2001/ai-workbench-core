@@ -18,6 +18,8 @@
 | Git Claude 行为 | [development/git-claude.md](development/git-claude.md) |
 | Python 代码 | [development/python.md](development/python.md) |
 | 日志记录 | [development/logging.md](development/logging.md) |
+| 日志格式 | [development/logging-format.md](development/logging-format.md) |
+| 日志 ETL | [development/logging-etl.md](development/logging-etl.md) |
 | 配置管理 | [development/config.md](development/config.md) |
 | 错误处理 | [development/error-handling.md](development/error-handling.md) |
 | 脚本编写 | [development/scripts.md](development/scripts.md) |

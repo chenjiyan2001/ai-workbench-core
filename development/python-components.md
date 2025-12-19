@@ -143,35 +143,50 @@ def parse_args() -> argparse.Namespace:
 
 ---
 
-## HTTP 客户端 - httpx
+## 日期时间 - dateparser / pendulum
 
-> TODO: 待补充
+### dateparser（解析不规则日期）
 
-- [ ] 超时配置
-- [ ] 重试策略
-- [ ] 连接池管理
-- [ ] 异步用法
+```python
+import dateparser
 
----
+# 自然语言解析
+dateparser.parse("3天前")           # datetime 对象
+dateparser.parse("2024年1月15日")
+dateparser.parse("last monday")
 
-## 数据验证 - pydantic
+# 指定语言
+dateparser.parse("15 janvier 2024", languages=["fr"])
+```
 
-> TODO: 待补充
+### pendulum（日常日期操作）
 
-- [ ] 模型定义规范
-- [ ] 校验规则
-- [ ] 配置类（BaseSettings）
-- [ ] 序列化/反序列化
+```python
+import pendulum
 
----
+# 时区感知
+now = pendulum.now("Asia/Shanghai")
+utc = pendulum.now("UTC")
 
-## 日期时间 - pendulum / arrow
+# 日期运算
+tomorrow = now.add(days=1)
+last_week = now.subtract(weeks=1)
 
-> TODO: 待补充
+# 格式化
+now.to_datetime_string()    # "2025-01-15 14:30:00"
+now.to_date_string()        # "2025-01-15"
 
-- [ ] 时区处理
-- [ ] 日期解析
-- [ ] 格式化输出
+# 人性化输出
+now.diff_for_humans()       # "刚刚"
+```
+
+### 选型建议
+
+| 场景 | 推荐 |
+|------|------|
+| 解析爬虫/用户输入的不规则日期 | `dateparser` |
+| 日常日期操作、时区处理 | `pendulum` |
+| 简单场景、无额外依赖 | 标准库 `datetime` + `zoneinfo` |
 
 ---
 
@@ -180,4 +195,4 @@ def parse_args() -> argparse.Namespace:
 - [ ] loguru 配置了合适的日志级别
 - [ ] tqdm 多线程使用 as_completed 模式
 - [ ] 非交互环境禁用进度条
-- [ ] HTTP 请求配置了超时
+- [ ] 日期时间处理考虑时区
