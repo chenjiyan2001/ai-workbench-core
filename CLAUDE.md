@@ -23,6 +23,7 @@
 | 脚本编写 | [development/scripts.md](development/scripts.md) |
 | 并发编程 | [development/python-concurrency.md](development/python-concurrency.md) |
 | 性能优化 | [development/python-performance.md](development/python-performance.md) |
+| 通用组件 | [development/python-components.md](development/python-components.md) |
 | MySQL | [database/mysql.md](database/mysql.md) |
 | MongoDB | [database/mongodb.md](database/mongodb.md) |
 | Redis | [database/redis.md](database/redis.md) |

@@ -18,6 +18,7 @@
 | [scripts.md](development/scripts.md) | 脚本编写规范（参数、多线程、断点续传） |
 | [python-concurrency.md](development/python-concurrency.md) | Python 并发编程（TODO） |
 | [python-performance.md](development/python-performance.md) | Python 性能优化（TODO） |
+| [python-components.md](development/python-components.md) | 通用组件规范（loguru、tqdm 等） |
 
 ### 数据库规范 (database/)
 
