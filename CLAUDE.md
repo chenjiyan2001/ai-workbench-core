@@ -13,6 +13,8 @@
 
 | 场景 | 规范文档 |
 |------|---------|
+| **工作流程** | [development/workflow.md](development/workflow.md) |
+| **CI/CD 配置** | [development/ci.md](development/ci.md) |
 | Git 基础规范 | [development/git.md](development/git.md) |
 | Git 操作指南 | [development/git-operations.md](development/git-operations.md) |
 | Git Claude 行为 | [development/git-claude.md](development/git-claude.md) |
@@ -82,6 +84,254 @@ Claude 与 Codex 在本项目中有明确的职责分工：
 
 ---
 
+## 工作流程（强制执行）
+
+> **详细说明**：本章节为核心流程的简化版，完整内容请参考 [development/workflow.md](development/workflow.md)
+
+### 核心理念
+
+**测试驱动 + 代码审查的 AI 开发流程**，避免 AI 生成代码演化为不可维护的"石山代码"。
+
+```
+核心公式：Prompt → Test → Review → Implementation → Review → CI/CD
+```
+
+**四大原则**：
+1. **测试是可执行的需求**，不是验证工具
+2. **Prompt 是第一等工程资产**，必须存档
+3. **Review 是强制质量关卡**，Codex + 人工双重审查
+4. **流程强制顺序执行**，禁止跳过阶段
+
+---
+
+### 五阶段模型
+
+#### 阶段 0：Prompt（人类主导）
+
+**目的**：明确需求、边界、假设
+
+**必须包含**：
+- 业务目标（Why）
+- 行为定义（What）
+- 边界条件 / 排除项
+- 示例（正例 / 反例）
+- 暂不关心的内容（Out of Scope）
+
+**产出物**：
+- 文本 Prompt（存档到项目文档或 Git）
+
+**禁止**：
+- ❌ 不写代码
+- ❌ 不写测试
+
+---
+
+#### 阶段 1：Test（AI 主导，强约束）
+
+**目的**：将 Prompt 转化为可执行规范
+
+**测试地位**：
+> **Tests are the source of truth.**
+
+**必须覆盖**：
+1. 正常路径（Happy Path）
+2. 边界条件
+3. 反例（明确禁止的情况）
+4. 不变量（长期必须成立的规则）
+
+**禁止**：
+- ❌ 不写实现代码
+- ❌ 不假设实现细节
+- ✅ 允许写失败的测试
+
+---
+
+#### 阶段 2：Test Review（Codex + 人工，强制）
+
+**目的**：确保测试正确、完整、符合需求
+
+**Review 流程**：
+
+1. **Codex Review**（自动）
+   - Claude 通过 **codex-ccb** 调用 Codex 进行审查
+   - Codex 检查：
+     - 测试覆盖是否完整
+     - 边界条件是否遗漏
+     - 测试逻辑是否正确
+     - 是否有冗余测试
+
+2. **人工 Review**（必须）
+   - 用户审查 Codex 的反馈
+   - 确认测试符合业务需求
+   - 批准进入下一阶段
+
+**产出物**：
+- Codex review 报告
+- 人工批准记录
+
+**禁止**：
+- ❌ 跳过 Codex review
+- ❌ 跳过人工确认
+- ❌ 在 review 未通过时进入 Implementation
+
+---
+
+#### 阶段 3：Implementation（AI 主导，最小化）
+
+**目的**：让所有测试通过，不引入额外行为
+
+**实现原则**：
+- Tests 决定"对错"
+- 实现只负责"如何做到"
+- **不做顺手优化**
+
+**禁止**：
+- ❌ 修改测试（除非测试本身被否定）
+- ❌ 扩展需求
+- ❌ 提前抽象
+
+---
+
+#### 阶段 4：Implementation Review（Codex + 人工，强制）
+
+**目的**：确保实现质量、代码规范、无安全隐患
+
+**Review 流程**：
+
+1. **Codex Review**（自动）
+   - Claude 通过 **codex-ccb** 调用 Codex 进行审查
+   - Codex 检查：
+     - 代码质量（可读性、可维护性）
+     - 是否遵循规范（命名、注释、类型注解）
+     - 性能问题
+     - 安全隐患
+     - 是否引入额外功能（未测试覆盖）
+
+2. **人工 Review**（必须）
+   - 用户审查 Codex 的反馈
+   - 确认代码符合团队标准
+   - 批准合并到主干
+
+**产出物**：
+- Codex review 报告
+- 人工批准记录
+
+**禁止**：
+- ❌ 跳过 Codex review
+- ❌ 跳过人工确认
+- ❌ 在 review 未通过时合并代码
+
+---
+
+### Claude 执行规范
+
+#### 识别流程适用场景
+
+**必须使用完整流程**：
+- 规则复杂（数据治理 / 金融 / 合规）
+- 需求可能反复调整
+- 长期维护项目
+- 用户明确要求"测试优先"
+
+**可简化（但仍建议 Prompt → 最小测试 → 实现）**：
+- 一次性脚本
+- 明确、短生命周期任务
+- 简单 Bug 修复
+
+#### 强制执行规则
+
+**阶段 0（Prompt）时**：
+1. 与用户确认需求
+2. 明确边界与排除项
+3. **不主动写代码或测试**
+
+**阶段 1（Test）时**：
+1. 根据 Prompt 编写测试
+2. 覆盖所有边界条件
+3. **不写实现代码**
+4. 测试允许失败（红灯）
+
+**阶段 2（Test Review）时**：
+1. **必须通过 codex-ccb** 调用 Codex 进行测试审查
+2. 向用户展示 Codex 的反馈
+3. **等待用户明确批准**后才能进入下一阶段
+4. 如果 Codex 或用户发现问题，返回阶段 1 修复
+
+**阶段 3（Implementation）时**：
+1. 让测试通过（绿灯）
+2. **不修改已通过的测试**
+3. **不添加测试未覆盖的功能**
+
+**阶段 4（Implementation Review）时**：
+1. **必须通过 codex-ccb** 调用 Codex 进行代码审查
+2. 向用户展示 Codex 的反馈
+3. **等待用户明确批准**后才能合并代码
+4. 如果 Codex 或用户发现问题，返回阶段 3 修复
+
+#### 阶段切换确认
+
+**进入 Test 阶段前**，询问用户：
+> "Prompt 已明确，是否开始编写测试？"
+
+**进入 Test Review 阶段前**：
+1. Claude 通过 codex-ccb 调用 Codex，提交测试代码审查请求
+2. 向用户展示：
+   > "测试已完成，正在请求 Codex review..."
+   >
+   > [Codex 反馈内容]
+   >
+   > "是否批准进入 Implementation 阶段？"
+
+**进入 Implementation 阶段前**，等待用户确认：
+> "Test Review 通过，是否开始实现？"
+
+**进入 Implementation Review 阶段前**：
+1. Claude 通过 codex-ccb 调用 Codex，提交实现代码审查请求
+2. 向用户展示：
+   > "实现已完成，正在请求 Codex review..."
+   >
+   > [Codex 反馈内容]
+   >
+   > "是否批准合并代码？"
+
+**进入 CI/CD 阶段前**，等待用户确认：
+> "Implementation Review 通过，是否推送到远程仓库触发 CI？"
+
+#### Git Worktree 使用（可选）
+
+对于复杂项目，建议使用 Worktree 物理隔离：
+
+| 阶段 | Worktree 路径 | 允许修改 |
+|------|-------------|---------|
+| Prompt | `prompt/*` | 文档 |
+| Test | `test/*` | `tests/` |
+| Implementation | `impl/*` | `src/` |
+
+**使用时机**：
+- 多人协作
+- 并行开发多个功能
+- 需要物理隔离风险
+
+---
+
+### 心智模型
+
+```
+Prompt 决定方向
+Test 冻结决策
+Review 守护质量（Codex + 人工）
+Implementation 可随时推翻
+CI/CD 自动验证
+```
+
+你不是在管理代码，而是在管理：
+- **决策**（Prompt + Test）
+- **质量**（Review 双重关卡）
+- **风险**（测试覆盖的边界）
+- **不确定性**（测试未覆盖的部分）
+
+---
+
 ## 核心指令
 
 ### 代码编写
@@ -118,6 +368,19 @@ Claude 与 Codex 在本项目中有明确的职责分工：
 5. **适时建议**: 当用户确认功能完成时，建议提交和推送
 6. **变更日志**: 提交时委托 Codex 编写变更日志
 
+### CI/CD 操作
+
+1. **推送前检查**: 在推送到远程仓库前，本地运行 CI 检查
+   ```powershell
+   pytest tests/ -v
+   ruff check src/
+   mypy src/
+   ```
+2. **CI 失败处理**: CI 失败时，修复问题而非绕过检查
+3. **禁止绕过**: 禁止添加 `# type: ignore`、`# noqa` 等注释绕过检查
+4. **新项目初始化**: 主动询问用户是否启用 CI，并配置 `.gitlab-ci.yml`
+5. **CI 配置参考**: 详见 [development/ci.md](development/ci.md)
+
 ## 语言要求
 
 - 代码注释: 中文
@@ -129,9 +392,24 @@ Claude 与 Codex 在本项目中有明确的职责分工：
 
 ### 字符集
 
-- **默认**: UTF-8
-- **文件编码**: UTF-8（无 BOM）
-- **数据库**: `utf8mb4`（MySQL）、`UTF-8`（其他）
+**全局编码规范：UTF-8（无 BOM）**
+
+所有场景必须使用 UTF-8 编码，包括但不限于：
+
+| 场景 | 要求 |
+|------|------|
+| **源代码文件** | UTF-8（Python、JavaScript、配置文件等） |
+| **脚本文件** | UTF-8（Shell、PowerShell、批处理等） |
+| **文档文件** | UTF-8（Markdown、文本文件等） |
+| **Git 仓库** | UTF-8（所有文本文件） |
+| **终端输出** | UTF-8（确保终端配置支持 UTF-8） |
+| **数据库** | `utf8mb4`（MySQL）、`UTF-8`（其他） |
+| **API 通信** | UTF-8（JSON、XML、HTTP Header） |
+
+**注意事项**：
+- 所有 UTF-8 文件**不使用 BOM**（Byte Order Mark）
+- IDE/编辑器默认编码设置为 UTF-8
+- 终端环境变量设置：`$env:PYTHONIOENCODING="utf-8"`（Windows）
 
 ### 时区
 

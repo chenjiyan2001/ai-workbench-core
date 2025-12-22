@@ -4,6 +4,35 @@
 
 ---
 
+## 项目命名规范
+
+### 仓库/项目名称
+
+Git 仓库和项目名称必须遵循以下规范：
+
+```
+格式: 全小写，使用短横线 (-) 分隔单词 (kebab-case)
+编码: UTF-8
+```
+
+**示例**:
+```bash
+# ✅ 正确
+ai-workbench-core
+data-processor
+user-service
+llm-integration
+mysql-connector
+
+# ❌ 错误
+AIWorkbench          # 不要用大写
+ai_workbench         # 用 - 不用 _
+aiworkbench          # 多个单词需要分隔符
+AI-Workbench-Core    # 不要用大写
+```
+
+---
+
 ## 分支规范
 
 ### 分支模型

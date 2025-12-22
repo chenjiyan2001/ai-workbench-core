@@ -1,0 +1,162 @@
+# GitLab CI/CD 配置模板
+# 适用于 Python 3.11+ 项目
+
+# ========================================
+# 全局配置
+# ========================================
+
+# 使用 Python 官方 Docker 镜像
+image: python:3.11
+
+# 定义 CI 阶段
+stages:
+  - test      # 测试阶段
+  - build     # 构建阶段（可选）
+
+# 全局变量
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PYTHONIOENCODING: "utf-8"
+
+# 缓存依赖，加速 CI
+cache:
+  paths:
+    - .cache/pip
+    - .venv/
+
+# ========================================
+# 通用脚本（在所有 job 前执行）
+# ========================================
+
+before_script:
+  - python --version
+  - pip install --upgrade pip
+  - pip install -r requirements.txt
+
+# ========================================
+# 层级 3：静态检查（Lint）
+# ========================================
+
+lint:
+  stage: test
+  script:
+    - pip install ruff
+    - ruff check src/ tests/
+  allow_failure: false  # 失败则阻止合并
+
+# ========================================
+# 层级 4：类型检查
+# ========================================
+
+type-check:
+  stage: test
+  script:
+    - pip install mypy
+    - mypy src/
+  allow_failure: false
+
+# ========================================
+# 层级 5：单元测试
+# ========================================
+
+test:
+  stage: test
+  script:
+    - pip install pytest
+    - pytest tests/ -v
+  allow_failure: false
+
+# ========================================
+# 层级 6：覆盖率（默认关闭，可手动开启）
+# ========================================
+
+# 取消注释以下代码块以启用覆盖率检查
+#
+# coverage:
+#   stage: test
+#   script:
+#     - pip install pytest-cov
+#     - pytest tests/ --cov=src --cov-report=term-missing --cov-report=html
+#   artifacts:
+#     paths:
+#       - htmlcov/
+#   coverage: '/TOTAL.*\s+(\d+%)$/'  # GitLab 覆盖率徽章
+#   allow_failure: true  # 覆盖率低不阻止合并
+
+# ========================================
+# 层级 7：变更约束
+# ========================================
+
+check-test-changes:
+  stage: test
+  script:
+    - |
+      # 检查 MR 是否修改了测试文件
+      CHANGED_FILES=$(git diff origin/main...HEAD --name-only)
+      if echo "$CHANGED_FILES" | grep -q "tests/"; then
+        echo "错误：禁止修改测试文件"
+        exit 1
+      fi
+  only:
+    - merge_requests
+  allow_failure: false
+
+# ========================================
+# 层级 8：产物检查（默认关闭，可手动开启）
+# ========================================
+
+# 取消注释以下代码块以启用产物检查
+#
+# build:
+#   stage: build
+#   script:
+#     - pip install build
+#     - python -m build
+#   artifacts:
+#     paths:
+#       - dist/
+#   allow_failure: true
+
+# ========================================
+# 可选：数据库服务示例
+# ========================================
+
+# 如果项目需要 MySQL / Redis / MongoDB 等服务，
+# 可以取消注释以下代码块
+
+# test-with-database:
+#   stage: test
+#   services:
+#     - name: mysql:8.0
+#       alias: mysql
+#   variables:
+#     MYSQL_ROOT_PASSWORD: password
+#     MYSQL_DATABASE: test_db
+#     DATABASE_URL: mysql://root:password@mysql:3306/test_db
+#   script:
+#     - pytest tests/integration/ -v
+
+# ========================================
+# 说明
+# ========================================
+
+# 1. 环境一致性（层级 1）：使用固定的 Python 3.11 镜像
+# 2. 依赖安装（层级 2）：before_script 中安装依赖
+# 3. 静态检查（层级 3）：ruff 检查代码风格
+# 4. 类型检查（层级 4）：mypy 检查类型注解
+# 5. 单元测试（层级 5）：pytest 运行测试
+# 6. 覆盖率（层级 6）：默认关闭，取消注释以启用
+# 7. 变更约束（层级 7）：禁止修改测试文件
+# 8. 产物检查（层级 8）：默认关闭，取消注释以启用
+
+# ========================================
+# 使用方法
+# ========================================
+
+# 1. 复制此文件到项目根目录，命名为 .gitlab-ci.yml
+# 2. 根据项目需求调整：
+#    - Python 版本（image: python:3.11）
+#    - 项目路径（src/ 和 tests/）
+#    - 启用可选层级（覆盖率、产物检查）
+# 3. 提交到 GitLab
+# 4. 访问项目页面 → CI/CD → Pipelines 查看运行结果
