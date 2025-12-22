@@ -6,6 +6,18 @@
 
 ## 命名规范
 
+### 标识符规范
+
+**强制使用反引号**包裹表名、字段名，避免与关键字冲突：
+
+```sql
+-- ✅ 正确：使用反引号
+SELECT `id`, `name`, `status` FROM `user` WHERE `order` = 1;
+
+-- ❌ 错误：不加反引号可能与关键字冲突
+SELECT id, name, status FROM user WHERE order = 1;  -- order 是关键字，报错
+```
+
 ### 数据库命名
 
 ```sql
@@ -190,6 +202,7 @@ ALTER TABLE operation_log DROP PARTITION p202501;
 
 **分区注意事项：**
 - 分区键必须包含在主键/唯一索引中
+- **AUTO_INCREMENT 的 id 仅在单分区内唯一**，跨分区可能重复；如需全局唯一 ID，使用 UUID 或分布式 ID 生成器
 - 查询条件应包含分区键，否则会扫描所有分区
 - 定期维护分区（添加新分区、清理旧分区）
 
@@ -261,21 +274,21 @@ for user in users:
 ### JOIN 规范
 
 ```sql
--- ✅ 推荐：明确 JOIN 类型，使用表别名
+-- ✅ 推荐：明确 JOIN 类型，使用表别名，表名加反引号
 SELECT
-    u.id,
-    u.name,
-    o.order_no,
-    o.amount
-FROM user u
-INNER JOIN order o ON u.id = o.user_id
-WHERE u.status = 'active'
-    AND o.created_at >= '2025-01-01';
+    `u`.`id`,
+    `u`.`name`,
+    `o`.`order_no`,
+    `o`.`amount`
+FROM `user` `u`
+INNER JOIN `order` `o` ON `u`.`id` = `o`.`user_id`
+WHERE `u`.`status` = 'active'
+    AND `o`.`created_at` >= '2025-01-01';
 
 -- ❌ 避免：隐式 JOIN（逗号连接）
-SELECT u.id, o.order_no
-FROM user u, order o
-WHERE u.id = o.user_id;
+SELECT `u`.`id`, `o`.`order_no`
+FROM `user` `u`, `order` `o`
+WHERE `u`.`id` = `o`.`user_id`;
 ```
 
 **JOIN 原则：**
@@ -293,15 +306,15 @@ WHERE u.id = o.user_id;
 -- WHERE 条件会过滤掉不满足的行
 
 -- ✅ 正确：查询所有用户及其订单（无订单的用户也显示）
-SELECT u.name, o.order_no
-FROM user u
-LEFT JOIN order o ON u.id = o.user_id AND o.status = 'paid';
+SELECT `u`.`name`, `o`.`order_no`
+FROM `user` `u`
+LEFT JOIN `order` `o` ON `u`.`id` = `o`.`user_id` AND `o`.`status` = 'paid';
 
 -- ❌ 错误：这样会过滤掉无订单的用户
-SELECT u.name, o.order_no
-FROM user u
-LEFT JOIN order o ON u.id = o.user_id
-WHERE o.status = 'paid';
+SELECT `u`.`name`, `o`.`order_no`
+FROM `user` `u`
+LEFT JOIN `order` `o` ON `u`.`id` = `o`.`user_id`
+WHERE `o`.`status` = 'paid';
 ```
 
 ### 子查询 vs JOIN
@@ -341,10 +354,11 @@ WHERE id IN (SELECT user_id FROM order);
 ### 索引原则
 
 1. 主键自动创建聚簇索引
-2. 外键字段必须创建索引
-3. WHERE/ORDER BY/GROUP BY 常用字段创建索引
-4. 联合索引遵循最左前缀原则
-5. 单表索引不超过 5 个
+2. **外键字段建表时创建索引**（JOIN 必用）
+3. **唯一约束字段建表时创建索引**
+4. **其他索引按需建立**（出现慢查询/EXPLAIN 显示全表扫描时）
+5. 联合索引遵循最左前缀原则
+6. 单表索引不超过 5 个
 
 ### 索引类型选择
 
@@ -602,7 +616,7 @@ DATABASE_CONFIG = {
 | pool_size | CPU 核数 * 2 | 常驻连接数 |
 | max_overflow | pool_size * 2 | 峰值额外连接 |
 | pool_timeout | 30 | 等待连接超时 |
-| pool_recycle | 3600 | 避免 MySQL 8 小时断开 |
+| pool_recycle | 3600 | 小于 MySQL wait_timeout（默认 28800s），避免连接被服务端关闭 |
 | pool_pre_ping | True | 防止使用失效连接 |
 
 ### ORM 选型
@@ -664,25 +678,30 @@ SELECT * FROM information_schema.INNODB_TRX;
 ### 故障处理与重连
 
 ```python
+from contextlib import asynccontextmanager
 from sqlalchemy.exc import OperationalError, DisconnectionError
+from sqlalchemy import text
 import asyncio
 
 class DatabaseManager:
     def __init__(self):
         self.engine = None
 
+    @asynccontextmanager
     async def get_connection(self, max_retries: int = 3):
         """获取连接，支持重试。"""
+        last_error = None
         for attempt in range(max_retries):
             try:
                 async with self.engine.connect() as conn:
                     yield conn
-                return
+                    return
             except (OperationalError, DisconnectionError) as e:
+                last_error = e
                 if attempt < max_retries - 1:
                     await asyncio.sleep(1 * (attempt + 1))
                     continue
-                raise
+                raise last_error
 
     async def health_check(self) -> bool:
         """健康检查。"""
@@ -726,24 +745,6 @@ SELECT id, name
 FROM user
 ORDER BY id
 LIMIT 100 OFFSET 100000;  -- 性能差
-```
-
-### 避免的写法
-
-```sql
--- ❌ 函数作用于索引字段
-SELECT * FROM user WHERE DATE(created_at) = '2024-01-01';
--- ✅ 改为
-SELECT * FROM user WHERE created_at >= '2024-01-01' AND created_at < '2024-01-02';
-
--- ❌ 隐式类型转换
-SELECT * FROM user WHERE phone = 13800138000;  -- phone 是 VARCHAR
--- ✅ 改为
-SELECT * FROM user WHERE phone = '13800138000';
-
--- ❌ LIKE 前缀通配
-SELECT * FROM user WHERE name LIKE '%张';
--- ✅ 如需全文搜索，使用 Elasticsearch
 ```
 
 ### EXPLAIN 执行计划解读
@@ -823,12 +824,12 @@ mysqldumpslow -s t -t 10 /var/log/mysql/slow.log
 ```python
 # ✅ 参数化查询（已在 SQL 编写规范中说明）
 await db.execute(
-    "SELECT * FROM user WHERE email = :email",
+    "SELECT `id`, `name`, `email` FROM `user` WHERE `email` = :email",
     {"email": user_input}
 )
 
 # ❌ 永远不要拼接用户输入
-await db.execute(f"SELECT * FROM user WHERE email = '{user_input}'")
+await db.execute(f"SELECT `id`, `name` FROM `user` WHERE `email` = '{user_input}'")
 ```
 
 ### 敏感数据处理
@@ -849,99 +850,6 @@ hashed = pwd_context.hash(password)  # 存储
 verified = pwd_context.verify(password, hashed)  # 验证
 ```
 
-### 权限管理
-
-```sql
--- 创建只读用户（应用查询）
-CREATE USER 'app_readonly'@'%' IDENTIFIED BY 'password';
-GRANT SELECT ON database.* TO 'app_readonly'@'%';
-
--- 创建读写用户（应用操作）
-CREATE USER 'app_readwrite'@'%' IDENTIFIED BY 'password';
-GRANT SELECT, INSERT, UPDATE, DELETE ON database.* TO 'app_readwrite'@'%';
-
--- 禁止 DROP/ALTER 等危险权限给应用账号
-```
-
-**权限原则：**
-- 应用账号只授予必要权限
-- 生产环境禁止使用 root 账号
-- 定期审计账号权限
-
-### 备份策略
-
-| 备份类型 | 频率 | 保留时间 | 工具 |
-|---------|------|---------|------|
-| 全量备份 | 每日 | 7 天 | mysqldump / xtrabackup |
-| 增量备份 | 每小时 | 24 小时 | binlog |
-| 跨区备份 | 每日 | 30 天 | 异地存储 |
-
-```bash
-# mysqldump 全量备份
-mysqldump -u root -p --single-transaction --routines --triggers \
-    database_name > backup_$(date +%Y%m%d).sql
-
-# 恢复
-mysql -u root -p database_name < backup_20250101.sql
-```
-
-## 运维相关
-
-### 慢日志配置
-
-```ini
-# my.cnf 配置
-[mysqld]
-slow_query_log = ON
-slow_query_log_file = /var/log/mysql/slow.log
-long_query_time = 1
-log_queries_not_using_indexes = ON
-```
-
-### 监控指标
-
-| 指标 | 说明 | 告警阈值 |
-|------|------|---------|
-| QPS | 每秒查询数 | 根据基线设置 |
-| TPS | 每秒事务数 | 根据基线设置 |
-| Threads_connected | 当前连接数 | > 80% max_connections |
-| Threads_running | 活跃线程数 | > CPU 核数 * 2 |
-| Slow_queries | 慢查询累计 | 持续增长 |
-| Innodb_buffer_pool_hit_rate | 缓冲池命中率 | < 95% |
-
-```sql
--- 查看关键指标
-SHOW GLOBAL STATUS LIKE 'Questions';  -- 累计查询数
-SHOW GLOBAL STATUS LIKE 'Com_select';  -- SELECT 次数
-SHOW GLOBAL STATUS LIKE 'Com_insert';  -- INSERT 次数
-SHOW GLOBAL STATUS LIKE 'Innodb_buffer_pool_read_requests';  -- 缓冲池请求
-SHOW GLOBAL STATUS LIKE 'Innodb_buffer_pool_reads';  -- 磁盘读取
-```
-
-### 容量规划
-
-**表大小查询：**
-
-```sql
-SELECT
-    table_name,
-    ROUND(data_length / 1024 / 1024, 2) AS data_mb,
-    ROUND(index_length / 1024 / 1024, 2) AS index_mb,
-    table_rows
-FROM information_schema.tables
-WHERE table_schema = 'your_database'
-ORDER BY data_length DESC;
-```
-
-**容量规划建议：**
-
-| 表行数 | 建议措施 |
-|--------|---------|
-| < 100 万 | 正常使用 |
-| 100 万 - 1000 万 | 考虑添加索引优化 |
-| 1000 万 - 1 亿 | 考虑分区表 |
-| > 1 亿 | 考虑分库分表 |
-
 ## 禁止事项
 
 - ❌ 禁止使用 `SELECT *`
@@ -961,9 +869,9 @@ ORDER BY data_length DESC;
 - [ ] 表和字段都有 COMMENT
 
 ### 索引
-- [ ] 外键字段有索引
-- [ ] 常用查询字段有索引支持
-- [ ] 联合索引遵循最左前缀原则
+- [ ] 外键字段有索引（建表时）
+- [ ] 唯一约束字段有索引（建表时）
+- [ ] 其他索引按需建立（有慢查询时）
 - [ ] 使用 EXPLAIN 验证索引生效
 
 ### SQL
@@ -979,5 +887,3 @@ ORDER BY data_length DESC;
 
 ### 安全
 - [ ] 敏感数据加密存储
-- [ ] 应用账号权限最小化
-- [ ] 有备份策略
